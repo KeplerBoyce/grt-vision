@@ -19,15 +19,17 @@ args = vars(ap.parse_args())
 colorLower = (20, 86, 50)
 colorUpper = (40, 255, 255)
 
+frame_num = 0
+START_FRAME = 300
+FRAME_STRIDE = 3
+
 # if no video was chosen, use webcam
+# otherwise, start video at chosen frame
 if not args.get("video", False):
     vs = VideoStream(src=0).start()
 else:
     vs = cv2.VideoCapture(args["video"])
-
-frame_num = 0
-START_FRAME = 500
-FRAME_STRIDE = 3
+    vs.set(cv2.CAP_PROP_POS_FRAMES, START_FRAME)
 
 # loop through frames
 while True:
@@ -39,11 +41,7 @@ while True:
     # stop if reaches end of video
     if frame is None:
         break
-    
-    # start at specific frame
-    if frame_num < START_FRAME:
-        continue
-    
+        
     # skip some frames to read faster
     if frame_num % FRAME_STRIDE != 0:
         continue
@@ -92,13 +90,14 @@ while True:
         # compared to something like a rectangle, so this lets you
         # check if the contour is likely circular)
         hull = cv2.convexHull(contour)
-        approx = cv2.approxPolyDP(hull, 3, True)
+        approx = cv2.approxPolyDP(hull, 2, True)
                 
         # bounding circle
         ((x, y), r) = cv2.minEnclosingCircle(hull)
         
-        # make sure radius is not tiny and check if seems circular
-        if r > 10 and len(approx) > 7:
+        # make sure radius is not tiny and check if
+        # polygon approximation had a lot of vertices
+        if r > 10 and len(approx) > 10:
             # draw a circle enclosing the object
             cv2.circle(frame, (int(x), int(y)), int(r), (0, 255, 0), 1)
             cv2.circle(frame, (int(x), int(y)), 1, (0, 0, 255), 1)
