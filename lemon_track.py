@@ -25,15 +25,28 @@ if not args.get("video", False):
 else:
     vs = cv2.VideoCapture(args["video"])
 
+frame_num = 0
+START_FRAME = 500
+FRAME_STRIDE = 3
+
 # loop through frames
 while True:
     # get frame from video stream
     frame = vs.read()
     frame = frame[1] if args.get("video", False) else frame
+    frame_num += 1
     
     # stop if reaches end of video
     if frame is None:
         break
+    
+    # start at specific frame
+    if frame_num < START_FRAME:
+        continue
+    
+    # skip some frames to read faster
+    if frame_num % FRAME_STRIDE != 0:
+        continue
     
     # resize, blur, and convert from rgb to hsv
     frame = imutils.resize(frame, width=600)
