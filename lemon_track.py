@@ -14,7 +14,7 @@ ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
 args = vars(ap.parse_args())
 
-# boudns of color range in hsv
+# bounds of color range in hsv
 # ranges are h:[0, 180], s:[0, 255], v:[0, 255]
 colorLower = (20, 86, 50)
 colorUpper = (40, 255, 255)
@@ -87,17 +87,19 @@ while True:
         contour = max(contour_list, key=cv2.contourArea)
         
         # approximate polygon (circle will have a lot of vertices
-        # compared to something like a rectangle, so this lets you
-        # check if the contour is likely circular)
+        # compared to something like a rectangle) which hopefully
+        # filters out non-ball objects of the same color
         hull = cv2.convexHull(contour)
-        approx = cv2.approxPolyDP(hull, 2, True)
+        epsilon = 0.015*cv2.arcLength(hull, True)
+        approx = cv2.approxPolyDP(hull, epsilon, True)
+        cv2.drawContours(frame, approx, -1, (255, 0, 0), 2);
                 
         # bounding circle
         ((x, y), r) = cv2.minEnclosingCircle(hull)
         
         # make sure radius is not tiny and check if
         # polygon approximation had a lot of vertices
-        if r > 10 and len(approx) > 10:
+        if r > 10 and len(approx) > 7:
             # draw a circle enclosing the object
             cv2.circle(frame, (int(x), int(y)), int(r), (0, 255, 0), 1)
             cv2.circle(frame, (int(x), int(y)), 1, (0, 0, 255), 1)
